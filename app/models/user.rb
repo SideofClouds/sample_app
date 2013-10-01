@@ -10,9 +10,21 @@
 #  password_digest :string(255)
 #
 
+module CreateRememberToken
+  def self.new_remember_token
+    SecureRandom.urlsafe_base64
+  end
+
+  def self.encrypt(token)
+    Digest::SHA1.hexdigest(token.to_s)
+  end
+end
+
 class User < ActiveRecord::Base
+  include CreateRememberToken
   attr_accessible :email, :name, :password, :password_confirmation
   before_save { self.email = email.downcase }
+  before_create :create_remember_token
   VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z]+)+\z/i
   validates :name, presence: true, length: { maximum: 50 }
   validates :password, presence: true, length: { minimum: 6 }
@@ -22,4 +34,8 @@ class User < ActiveRecord::Base
             format:     { with: VALID_EMAIL_REGEX },
             uniqueness: { case_sensitive: false }
   has_secure_password
+  private
+    def create_remember_token
+      self.remember_token = CreateRememberToken.encrypt(CreateRememberToken.new_remember_token)
+    end
 end
