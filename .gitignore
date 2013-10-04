@@ -20,3 +20,7 @@ doc/
 .project
 .DS_Store
 .idea
+pivotal.xml
+Railscasts.xml
+thinmint.xml
+thinmint.icls
