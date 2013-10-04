@@ -41,7 +41,10 @@ describe 'Authentication' do
 
       describe 'followed by signout' do
         before { click_link 'Sign out' }
+
         it { should have_link('Sign in') }
+        it { should_not have_link('Profile', href: user_path(user)) }
+        it { should_not have_link('Settings', href: edit_user_path(user)) }
       end
     end
   end
@@ -92,6 +95,20 @@ describe 'Authentication' do
         describe 'after signin in' do
           it 'should render the desired protected page' do
             page.should have_selector('title', text: 'Edit user')
+          end
+
+          describe 'when signing in again' do
+            before do
+              delete signout_path
+              visit signin_path
+              fill_in 'Email',    with: user.email
+              fill_in 'Password', with: user.password
+              click_button 'Sign in'
+            end
+
+            it 'should render the default (profile) page' do
+              page.should have_selector('title', text: user.name)
+            end
           end
         end
       end
