@@ -11,18 +11,6 @@
 #  remember_token  :string(255)
 #
 
-# == Schema Information
-#
-# Table name: users
-#
-#  id              :integer          not null, primary key
-#  name            :string(255)
-#  email           :string(255)
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  password_digest :string(255)
-#
-
 module CreateRememberToken
   def self.new_remember_token
     SecureRandom.urlsafe_base64
@@ -36,6 +24,8 @@ end
 class User < ActiveRecord::Base
   include CreateRememberToken
   attr_accessible :email, :name, :password, :password_confirmation
+  has_many :microposts, dependent: :destroy
+
   before_save { self.email = email.downcase }
   before_create :create_remember_token
   VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z]+)+\z/i
@@ -47,6 +37,12 @@ class User < ActiveRecord::Base
             format:     { with: VALID_EMAIL_REGEX },
             uniqueness: { case_sensitive: false }
   has_secure_password
+
+  def feed
+    # This is preliminary
+    Micropost.where('user_id = ?', id)
+  end
+
   private
     def create_remember_token
       self.remember_token = CreateRememberToken.encrypt(CreateRememberToken.new_remember_token)
